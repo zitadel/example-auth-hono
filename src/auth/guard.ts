@@ -1,5 +1,5 @@
 import { Context, Next } from 'hono';
-import { verifyAuth } from '@hono/auth-js';
+import { getAuthUser } from '@hono/auth-js';
 
 /**
  * Middleware that ensures the user is authenticated before accessing
@@ -35,13 +35,14 @@ export async function requireAuth(
   c: Context,
   next: Next,
 ): Promise<Response | void> {
-  const auth = verifyAuth();
-
-  if (!auth) {
-    const callbackUrl: string = encodeURIComponent(c.req.url);
-    return c.redirect(`/auth/signin?callbackUrl=${callbackUrl}`);
+  try {
+    const authUser = await getAuthUser(c);
+    if (!authUser?.session.user) {
+      const callbackUrl: string = encodeURIComponent(c.req.url);
+      return c.redirect(`/auth/signin?callbackUrl=${callbackUrl}`);
+    }
+    await next();
+  } catch (err) {
+    throw err as Error;
   }
-
-  c.set('session', auth);
-  await next();
 }

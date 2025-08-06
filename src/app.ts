@@ -41,19 +41,17 @@ export async function build(): Promise<Hono> {
   app.use('*', viewMiddleware());
 
   /**
-   * Initiates the logout process by redirecting the user to the external
-   * Identity Provider's (IdP) logout endpoint. This endpoint validates that
-   * the user has an active session with a valid ID token, generates a
-   * cryptographically secure state parameter for CSRF protection, and stores
-   * it in a secure HTTP-only cookie.
+   * Initiates the logout process by redirecting the user to the external Identity
+   * Provider's (IdP) logout endpoint. This endpoint validates that the user has an
+   * active session with a valid ID token, generates a cryptographically secure state
+   * parameter for CSRF protection, and stores it in a secure HTTP-only cookie.
    *
-   * The state parameter will be validated upon the user's return from the IdP
-   * to ensure the logout callback is legitimate and not a forged request.
+   * The state parameter will be validated upon the user's return from the IdP to
+   * ensure the logout callback is legitimate and not a forged request.
    *
-   * @param c - Hono Context object
-   * @returns A redirect response to the IdP's logout URL on success, or a
-   * 400-error response if no valid session exists. The response includes a
-   * secure state cookie that will be validated in the logout callback.
+   * @returns A redirect response to the IdP's logout URL on success, or a 400-error
+   * response if no valid session exists. The response includes a secure state cookie
+   * that will be validated in the logout callback.
    */
   app.post('/auth/logout', async (c: Context): Promise<Response> => {
     const authUser: AuthUser | null = await getAuthUser(c);
@@ -76,19 +74,17 @@ export async function build(): Promise<Hono> {
   });
 
   /**
-   * Handles the callback from an external Identity Provider (IdP) after a
-   * user signs out. This endpoint is responsible for validating the logout
-   * request to prevent Cross-Site Request Forgery (CSRF) attacks by comparing
-   * a `state` parameter from the URL with a value stored in a secure,
-   * server-side cookie. If validation is successful, it clears the user's
-   * session cookies and redirects to a success page. Otherwise, it redirects
-   * to an error page.
+   * Handles the callback from an external Identity Provider (IdP) after a user
+   * signs out. This endpoint is responsible for validating the logout request to
+   * prevent Cross-Site Request Forgery (CSRF) attacks by comparing a `state`
+   * parameter from the URL with a value stored in a secure, server-side cookie.
+   * If validation is successful, it clears the user's session cookies and
+   * redirects to a success page. Otherwise, it redirects to an error page.
    *
    * @param c - The Hono context object, which contains the request and
    *            response functionality.
-   * @returns A redirect response that either redirects the user to a success
-   * or error page. Upon success, it includes headers to delete session
-   * cookies.
+   * @returns A Response object that either redirects the user to a success
+   * or error page. Upon success, it includes headers to delete session cookies.
    */
   app.get('/auth/logout/callback', async (c: Context): Promise<Response> => {
     const state: string | undefined = c.req.query('state');
@@ -108,21 +104,20 @@ export async function build(): Promise<Hono> {
   /**
    * GET /auth/signin
    *
-   * Renders a custom sign-in page that displays available authentication
-   * providers and handles authentication errors with user-friendly messaging.
-   * This page is shown when users need to authenticate, either by visiting
-   * directly or after being redirected from protected routes via the
-   * requireAuth middleware.
+   * Renders a custom sign-in page that displays available authentication providers
+   * and handles authentication errors with user-friendly messaging. This page is
+   * shown when users need to authenticate, either by visiting directly or after
+   * being redirected from protected routes via the requireAuth middleware.
    *
-   * The sign-in page provides a branded authentication experience that matches
-   * the application's design system, rather than using Auth.js default pages.
-   * It supports error display, callback URL preservation, and CSRF protection
-   * via client-side JavaScript.
+   * The sign-in page provides a branded authentication experience that matches the
+   * application's design system, rather than using Auth.js default pages. It
+   * supports error display, callback URL preservation, and CSRF protection via
+   * client-side JavaScript.
    *
    * Authentication flow:
    * 1. User visits protected route without session
    * 2. requireAuth redirects to /auth/signin?callbackUrl=<original-url>
-   * 3. This route renders a custom sign-in page with available providers
+   * 3. This route renders custom sign-in page with available providers
    * 4. User selects provider, CSRF token is fetched and added via JavaScript
    * 5. Form submits to /auth/signin/[provider] to initiate OAuth flow
    * 6. After successful authentication, user is redirected to callbackUrl
@@ -131,40 +126,72 @@ export async function build(): Promise<Hono> {
    * Configuration, OAuthCallback, and others, displaying contextual messages
    * via the getMessage utility function.
    *
-   * The page specifically looks for the 'zitadel' provider to match the
-   * original implementation behavior, showing only that provider's sign-in
-   * option even if multiple providers are configured.
+   * The page specifically looks for the 'zitadel' provider to match the original
+   * implementation behavior, showing only that provider's sign-in option even
+   * if multiple providers are configured.
    *
    * @param c - Hono Context object containing query parameters:
-   *              - callbackUrl: URL to redirect after successful auth
+   *              - callbackUrl: URL to redirect after successful authentication
+   *              - error: Auth.js error code for display (optional)
+   */
+  /**
+   * GET /auth/signin
+   *
+   * Renders a custom sign-in page that displays available authentication providers
+   * and handles authentication errors with user-friendly messaging. This page is
+   * shown when users need to authenticate, either by visiting directly or after
+   * being redirected from protected routes via the requireAuth middleware.
+   *
+   * The sign-in page provides a branded authentication experience that matches the
+   * application's design system, rather than using Auth.js default pages. It
+   * supports error display, callback URL preservation, and CSRF protection via
+   * client-side JavaScript.
+   *
+   * Authentication flow:
+   * 1. User visits protected route without session
+   * 2. requireAuth redirects to /auth/signin?callbackUrl=<original-url>
+   * 3. This route renders custom sign-in page with available providers
+   * 4. User selects provider, CSRF token is fetched and added via JavaScript
+   * 5. Form submits to /auth/signin/[provider] to initiate OAuth flow
+   * 6. After successful authentication, user is redirected to callbackUrl
+   *
+   * Error handling supports all Auth.js error types including AccessDenied,
+   * Configuration, OAuthCallback, and others, displaying contextual messages
+   * via the getMessage utility function.
+   *
+   * The page specifically looks for the 'zitadel' provider to match the original
+   * implementation behavior, showing only that provider's sign-in option even
+   * if multiple providers are configured.
+   *
+   * @param c - Hono Context object containing query parameters:
+   *              - callbackUrl: URL to redirect after successful authentication
    *              - error: Auth.js error code for display (optional)
    */
   app.get('/auth/signin', async (c: Context) => {
-    const callbackUrl = c.req.query('callbackUrl') ?? '/profile';
+    const callbackUrl = c.req.query('callbackUrl');
     const error = c.req.query('error');
 
     const providers: Provider[] = authConfig.providers.map((provider) => {
-      const cfg = typeof provider === 'function' ? provider() : provider;
+      const config = typeof provider === 'function' ? provider() : provider;
       return {
-        id: cfg.id,
-        name: cfg.name,
-        signinUrl: `/auth/signin/${cfg.id}`,
+        id: config.id,
+        name: config.name,
+        signinUrl: `/auth/signin/${config.id}`,
       };
     });
 
     return c.view('auth/signin', {
       providers,
       callbackUrl,
-      message: getMessage(error, 'signin-error'),
+      message: error ? getMessage(error, 'signin-error') : undefined,
     });
   });
 
   /**
    * GET /auth/error
    *
-   * Intercepts authentication-related errors (e.g. AccessDenied,
-   * Configuration, Verification) from sign-in or callback flows and shows a
-   * friendly error page.
+   * Intercepts authentication-related errors (e.g. AccessDenied, Configuration,
+   * Verification) from sign-in or callback flows and shows a friendly error page.
    *
    * @param c  - The Hono context. May have `c.req.query('error')` set to an
    *             error code string.
@@ -178,10 +205,9 @@ export async function build(): Promise<Hono> {
   /**
    * ZITADEL UserInfo endpoint
    *
-   * Fetches extended user information from ZITADEL's UserInfo endpoint using
-   * the current session's access token. Provides real-time user data including
-   * roles, custom attributes, and organization membership that may not be in
-   * the cached session.
+   * Fetches extended user information from ZITADEL's UserInfo endpoint using the
+   * current session's access token. Provides real-time user data including roles,
+   * custom attributes, and organization membership that may not be in the cached session.
    *
    * @param c - Hono Context object
    */
@@ -221,9 +247,6 @@ export async function build(): Promise<Hono> {
     },
   );
 
-  // Auth.js middleware using @hono/auth-js
-  app.use('/auth/*', authHandler());
-
   /**
    * Home page.
    *
@@ -246,10 +269,9 @@ export async function build(): Promise<Hono> {
   /**
    * GET /auth/logout/success
    *
-   * Renders a confirmation page indicating the user has successfully logged
-   * out. After displaying a success message, the template may include
-   * client-side logic to redirect the user back to the home page after a
-   * short delay.
+   * Renders a confirmation page indicating the user has successfully logged out.
+   * After displaying a success message, the template may include client-side logic
+   * to redirect the user back to the home page after a short delay.
    *
    * @param c  - Hono Context object (unused)
    */
@@ -260,11 +282,10 @@ export async function build(): Promise<Hono> {
   /**
    * GET /auth/logout/error
    *
-   * Displays a user-friendly error page for failed logout attempts. This page
-   * is typically shown when a security check fails during the logout process,
-   * commonly due to a CSRF protection failure where the `state` parameter
-   * from the identity provider does not match the one stored securely in
-   * session.
+   * Displays a user-friendly error page for failed logout attempts. This page is
+   * typically shown when a security check fails during the logout process,
+   * commonly due to a CSRF protection failure where the `state` parameter from
+   * the identity provider does not match the one stored securely in session.
    *
    * @param c   - Hono Context object containing the query parameter `reason`
    */
@@ -274,20 +295,72 @@ export async function build(): Promise<Hono> {
   });
 
   /**
+   * Mounts Auth.js Hono middleware to handle OAuth 2.0/OIDC authentication flows.
+   *
+   * This middleware provides the complete authentication infrastructure including
+   * sign-in, sign-out, callback handling, session management, and CSRF protection.
+   * It automatically creates endpoints for OAuth flows under the `/auth` path.
+   *
+   * The authHandler middleware registers several endpoints for authentication:
+   * - `/auth/signin/[provider]` - Initiates OAuth flow with specified provider
+   * - `/auth/callback/[provider]` - Handles OAuth callback from provider
+   * - `/auth/signout` - Signs out user and clears session
+   * - `/auth/session` - Returns current session data as JSON
+   * - `/auth/csrf` - Returns CSRF token for form submissions
+   *
+   * IMPORTANT: All custom `/auth/*` routes MUST be defined BEFORE this
+   * middleware to prevent conflicts. Hono matches routes in definition order,
+   * and this middleware will intercept ALL `/auth/*` requests that don't match
+   * your custom routes first.
+   *
+   * Correct Order:
+   * ```typescript
+   * // ✓ Define custom auth routes FIRST
+   * app.get('/auth/logout/success', handler);
+   * app.get('/auth/logout/error', handler);
+   * app.get('/auth/error', handler);
+   *
+   * // ✓ Mount authHandler AFTER custom routes
+   * app.use('/auth/*', authHandler());
+   * ```
+   *
+   * Incorrect Order (will cause UnknownAction errors):
+   * ```typescript
+   * // ✗ authHandler intercepts everything first
+   * app.use('/auth/*', authHandler());
+   *
+   * // ✗ These routes will never be reached
+   * app.get('/auth/logout/success', handler);
+   * ```
+   *
+   * If a request matches `/auth/*` but isn't a recognized Auth.js action, the
+   * middleware throws an UnknownAction error. This happens when:
+   * - Custom auth routes are defined after this middleware
+   * - Invalid or misspelled auth endpoints are accessed
+   * - Routes conflict with Auth.js internal naming conventions
+   *
+   * The middleware behavior is controlled by the `authConfig` object which
+   * includes providers, session settings, callbacks, and security options.
+   * See `authConfig` in `auth/index.ts` for complete configuration details.
+   *
+   * @see {@link https://authjs.dev/reference/hono} Auth.js Hono documentation
+   * @see {@link authConfig} Complete authentication configuration
+   */
+  app.use('/auth/*', authHandler());
+
+  /**
    * GET /profile
    *
    * Profile page with detailed user information.
    *
-   * Renders a comprehensive view of the signed-in user's profile — for
-   * example, display name, email, roles, and any custom attributes — as well
-   * as session metadata (tokens, expiry, etc.). This route is guarded by
-   * `requireAuth`, so unauthenticated requests are automatically redirected
-   * into the sign-in flow. After confirming authentication, we call
-   * `getSession` to retrieve the latest session data, then render the
-   * `profile` template with the full `user` object.
+   * Renders a comprehensive view of the signed-in user's profile — for example,
+   * display name, email, roles, and any custom attributes — as well as session
+   * metadata (tokens, expiry, etc.). This route is guarded by `requireAuth`, so
+   * unauthenticated requests are automatically redirected into the sign-in flow.
+   * After confirming authentication, we call `getAuthUser` to retrieve the latest
+   * session data, then render the `profile` template with the full `user` object.
    *
-   * @param c  - Hono Context object, guaranteed to have an authenticated
-   *             session
+   * @param c  - Hono Context object, guaranteed to have an authenticated session
    */
   app.get('/profile', requireAuth, async (c: Context) => {
     const session = await getAuthUser(c);
@@ -299,13 +372,12 @@ export async function build(): Promise<Hono> {
   /**
    * Catch-all 404 handler.
    *
-   * This middleware is invoked when no other route matches the incoming
-   * request. It responds with a 404 status and renders the 'not-found'
-   * template, providing a user-friendly page indicating that the requested
-   * resource could not be found.
+   * This middleware is invoked when no other route matches the incoming request.
+   * It responds with a 404 status and renders the 'not-found' template, providing
+   * a user-friendly page indicating that the requested resource could not be found.
    *
    * @param c  - Hono Context object for the incoming request
-   * @returns    404 Response with rendered template
+   * @returns    void
    */
   app.notFound((c: Context): Response => {
     return c.view('not-found', {});
