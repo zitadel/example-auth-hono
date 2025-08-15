@@ -102,7 +102,7 @@ export async function build(): Promise<Hono> {
   });
 
   /**
-   * GET /auth/signin
+   * GET /auth/login
    *
    * Renders a custom sign-in page that displays available authentication providers
    * and handles authentication errors with user-friendly messaging. This page is
@@ -116,7 +116,7 @@ export async function build(): Promise<Hono> {
    *
    * Authentication flow:
    * 1. User visits protected route without session
-   * 2. requireAuth redirects to /auth/signin?callbackUrl=<original-url>
+   * 2. requireAuth redirects to /auth/login?callbackUrl=<original-url>
    * 3. This route renders custom sign-in page with available providers
    * 4. User selects provider, CSRF token is fetched and added via JavaScript
    * 5. Form submits to /auth/signin/[provider] to initiate OAuth flow
@@ -149,7 +149,7 @@ export async function build(): Promise<Hono> {
    *
    * Authentication flow:
    * 1. User visits protected route without session
-   * 2. requireAuth redirects to /auth/signin?callbackUrl=<original-url>
+   * 2. requireAuth redirects to /auth/login?callbackUrl=<original-url>
    * 3. This route renders custom sign-in page with available providers
    * 4. User selects provider, CSRF token is fetched and added via JavaScript
    * 5. Form submits to /auth/signin/[provider] to initiate OAuth flow
@@ -167,7 +167,7 @@ export async function build(): Promise<Hono> {
    *              - callbackUrl: URL to redirect after successful authentication
    *              - error: Auth.js error code for display (optional)
    */
-  app.get('/auth/signin', async (c: Context) => {
+  app.get('/auth/login', async (c: Context) => {
     const callbackUrl = c.req.query('callbackUrl');
     const error = c.req.query('error');
 
@@ -180,7 +180,7 @@ export async function build(): Promise<Hono> {
       };
     });
 
-    return c.view('auth/signin', {
+    return c.view('auth/login', {
       providers,
       callbackUrl,
       message: error ? getMessage(error, 'signin-error') : undefined,

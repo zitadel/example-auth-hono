@@ -144,7 +144,7 @@ export const authConfig: AuthConfig = {
   secret: config.SESSION_SECRET,
 
   pages: {
-    signIn: '/auth/signin',
+    signIn: '/auth/login',
     error: '/auth/error',
   },
 
