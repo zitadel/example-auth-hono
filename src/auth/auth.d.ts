@@ -1,5 +1,3 @@
-// types/auth-augmentations.d.ts
-
 import type { Session as CoreSession } from '@auth/core';
 import type { JWT as CoreJWT } from '@auth/core/jwt';
 

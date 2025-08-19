@@ -3,7 +3,6 @@ import Handlebars from 'handlebars';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 
-// minimal ResponseInit type for HTML responses
 type ResponseInit = {
   status?: number;
   statusText?: string;

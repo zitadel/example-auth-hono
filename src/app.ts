@@ -24,7 +24,6 @@ interface Provider {
 export async function build(): Promise<Hono> {
   const app: Hono = new Hono();
 
-  // Initialize Auth.js configuration
   app.use(
     '*',
     initAuthConfig(() => authConfig),
@@ -55,14 +54,12 @@ export async function build(): Promise<Hono> {
    */
   app.post('/auth/logout', async (c: Context): Promise<Response> => {
     const authUser: AuthUser | null = await getAuthUser(c);
-    // pull the ZITADEL ID token out of authUser.session
     const idToken = authUser?.session.idToken;
 
     if (!idToken) {
       return c.json({ error: 'No valid session or ID token found' }, 400);
     }
 
-    // now call logout builder with the real ID token
     const { url, state } = await buildLogoutUrl(idToken);
     setCookie(c, 'logout_state', state, {
       httpOnly: true,
@@ -229,7 +226,6 @@ export async function build(): Promise<Hono> {
           { headers: { Authorization: `Bearer ${token}` } },
         );
         if (!idpRes.ok) {
-          // ← manual Response to allow dynamic status
           return new Response(
             JSON.stringify({ error: `UserInfo API error: ${idpRes.status}` }),
             {
