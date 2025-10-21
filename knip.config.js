@@ -1,6 +1,2 @@
 // eslint-disable-next-line no-undef
-module.exports = {
-  ignoreDependencies: [
-    //
-  ],
-};
+module.exports = {};

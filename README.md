@@ -131,12 +131,15 @@ Complete logout implementation that properly terminates both the local session a
 ```javascript
 import { secureHeaders } from 'hono/secure-headers';
 
-app.use('*', secureHeaders({
-  contentSecurityPolicy: {
-    defaultSrc: ["'self'"],
-    scriptSrc: ["'self'", "'unsafe-eval'", "'unsafe-inline'"],
-  },
-}));
+app.use(
+  '*',
+  secureHeaders({
+    contentSecurityPolicy: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-eval'", "'unsafe-inline'"],
+    },
+  }),
+);
 ```
 
 At minimum, configure:
