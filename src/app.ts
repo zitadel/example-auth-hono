@@ -1,7 +1,7 @@
 import type { Context } from 'hono';
 import { Hono } from 'hono';
 import { serveStatic } from '@hono/node-server/serve-static';
-import { getCookie, setCookie } from 'hono/cookie';
+import { deleteCookie, getCookie, setCookie } from 'hono/cookie';
 import type { AuthUser } from '@hono/auth-js';
 import { authHandler, getAuthUser, initAuthConfig } from '@hono/auth-js';
 import config from './config.js';
@@ -78,9 +78,11 @@ export async function build(): Promise<Hono> {
    * If validation is successful, it clears the user's session cookies and
    * redirects to a success page. Otherwise, it redirects to an error page.
    *
-   * @param c - The Hono context object, which contains the request and
-   *            response functionality.
-   * @returns A Response object that either redirects the user to a success
+   * @param c - The incoming Hono context object, which contains the URL and
+   * its search parameters (including the `state` from the IdP) as well as the
+   * response functionality used to send the redirect and the cookie-clearing
+   * headers.
+   * @returns A redirect response that either redirects the user to a success
    * or error page. Upon success, it includes headers to delete session cookies.
    */
   app.get('/auth/logout/callback', async (c: Context): Promise<Response> => {
@@ -89,6 +91,12 @@ export async function build(): Promise<Hono> {
 
     if (state && logoutStateCookie && state === logoutStateCookie) {
       c.header('Clear-Site-Data', '"cookies"');
+      for (const name of Object.keys(getCookie(c))) {
+        if (name.includes('authjs.')) {
+          deleteCookie(c, name, { path: '/' });
+        }
+      }
+      deleteCookie(c, 'logout_state', { path: '/auth/logout/callback' });
       return c.redirect('/auth/logout/success');
     } else {
       const reason: string = encodeURIComponent(
