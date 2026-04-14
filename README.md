@@ -38,7 +38,7 @@ You'll need a ZITADEL account and application configured. Follow the [ZITADEL do
 
 ### Configuration
 
-To run the application, you first need to copy the `.env.example` file to a new file named `.env.local` and fill in your ZITADEL application credentials.
+To run the application, you first need to copy the `.env.example` file to a new file named `.env` and fill in your ZITADEL application credentials.
 
 ```dotenv
 # Port number where your Hono server will listen for incoming HTTP requests.
@@ -84,9 +84,6 @@ ZITADEL_POST_LOGOUT_URL="http://localhost:3000/auth/logout/callback"
 # Defaults to "/profile" if not specified.
 ZITADEL_POST_LOGIN_URL="/profile"
 
-# Auth.js base URL for your application. In development, this is typically
-# http://localhost:3000. In production, use your actual domain.
-NEXTAUTH_URL="http://localhost:3000"
 ```
 
 ### Installation and Running
