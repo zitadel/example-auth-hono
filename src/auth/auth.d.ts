@@ -1,57 +1,40 @@
-import type { Session as CoreSession } from '@auth/core';
-import type { JWT as CoreJWT } from '@auth/core/jwt';
+import '@zitadel/hono-auth';
+import '@auth/core/jwt';
 
 /**
- * Extend Auth.js core Session to include ZITADEL tokens.
- * This augmentation must be in your tsconfig's include/typeRoots.
+ * Extend Auth.js Session interface to include ZITADEL-specific tokens.
+ *
+ * This makes ZITADEL tokens available throughout your application via
+ * the session object returned by getAuthUser().
  */
-declare module '@auth/core/types' {
-  interface Session extends CoreSession {
-    /** OpenID Connect ID token */
+declare module '@zitadel/hono-auth' {
+  interface Session {
+    /** The OpenID Connect ID token from ZITADEL - used for logout and user identification */
     idToken?: string;
-    /** OAuth2 access token */
+    /** The OAuth 2.0 access token - used for making authenticated API calls to ZITADEL */
     accessToken?: string;
-    /** Error flag when refresh fails */
+    /** Error state indicating if token refresh failed - user needs to re-authenticate */
     error?: string;
   }
 }
 
 /**
- * Extend Auth.js core JWT to store ZITADEL token metadata.
+ * Extend Auth.js JWT interface to store all necessary tokens and metadata.
+ *
+ * This internal interface stores tokens securely in the encrypted JWT that
+ * Auth.js uses for session management.
  */
 declare module '@auth/core/jwt' {
-  interface JWT extends CoreJWT {
-    /** OpenID Connect ID token */
+  interface JWT {
+    /** The OpenID Connect ID token from ZITADEL */
     idToken?: string;
-    /** OAuth2 access token */
+    /** The OAuth 2.0 access token for making API calls */
     accessToken?: string;
-    /** OAuth2 refresh token */
+    /** The OAuth 2.0 refresh token for getting new access tokens */
     refreshToken?: string;
-    /** Timestamp in ms when access token expires */
+    /** Unix timestamp (in milliseconds) when the access token expires */
     expiresAt?: number;
-    /** Error flag when refresh fails */
+    /** Error flag set when token refresh fails */
     error?: string;
-  }
-}
-
-/**
- * Extend Hono Auth.js AuthUser so .session and .token carry our augmented types.
- */
-declare module '@hono/auth-js/dist/index' {
-  interface AuthUser {
-    /** Extended session with ZITADEL tokens */
-    session: CoreSession & {
-      idToken?: string;
-      accessToken?: string;
-      error?: string;
-    };
-    /** Extended JWT with ZITADEL tokens */
-    token?: CoreJWT & {
-      idToken?: string;
-      accessToken?: string;
-      refreshToken?: string;
-      expiresAt?: number;
-      error?: string;
-    };
   }
 }

@@ -2,11 +2,16 @@ import Zitadel from '@auth/core/providers/zitadel';
 import { randomUUID } from 'crypto';
 import * as oidc from 'openid-client';
 import type { JWT } from '@auth/core/jwt';
-import { Account, Profile, Session, User } from '@auth/core/types';
 import { ZITADEL_SCOPES } from './scopes.js';
 import { AdapterUser } from '@auth/core/adapters';
 import config from '../config.js';
-import { AuthConfig } from '@hono/auth-js';
+import type {
+  Account,
+  AuthConfig,
+  Profile,
+  Session,
+  User,
+} from '@zitadel/hono-auth';
 
 /**
  * Automatically refreshes an expired access token using the refresh token.

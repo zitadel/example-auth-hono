@@ -1,5 +1,5 @@
 import { Context, Next } from 'hono';
-import { getAuthUser } from '@hono/auth-js';
+import { getAuthUser } from '@zitadel/hono-auth';
 
 /**
  * Middleware that ensures the user is authenticated before accessing
